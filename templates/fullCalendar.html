@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'datepicker/dist/mc-calendar.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/evo-calendar@1.1.2/evo-calendar/css/evo-calendar.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <style>
+        #form_container {
+            margin-top: 5%;
+        }
+
+        .form-inline {
+            padding-left: 10%;
+        }
+
+        /* Custom, iPhone Retina */
+        @media only screen and (min-width: 320px) {
+            .form-inline {
+                margin-left: 15%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+<div id="calendar"></div>
+
+
+<div class="row" id="form_row">
+    <div class="container" id="form_container">
+        {% csrf_token %}
+        <form class="form-inline">
+            <div class="form-group mx-sm-3 mb-2">
+                <label for="inputPassword2" class="sr-only">Start Date</label>
+                <input type="text" class="form-control" id="start_date" placeholder="Start Date">
+            </div>
+            <div class="form-group mx-sm-3 mb-2">
+                <label for="inputPassword2" class="sr-only">End Date</label>
+                <input type="text" class="form-control" id="end_date" placeholder="End Date">
+            </div>
+            <button type="button" id="submit" onclick="getData()" class="btn btn-primary mb-2">SUBMIT</button>
+        </form>
+    </div>
+</div>
+{#<button id="aa">aaaa</button>#}
+<!-- Add jQuery library (required) -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+<script src="{% static 'datepicker/dist/mc-calendar.min.js' %}"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+<!-- Add the evo-calendar.js for.. obviously, functionality! -->
+<script src="https://cdn.jsdelivr.net/npm/evo-calendar@1.1.2/evo-calendar/js/evo-calendar.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+
+<script>
+    var reservation_data = {{reservation_data|safe}};
+
+
+
+    for (var i in reservation_data) {
+        myEvents = [
+            {
+                id: "required-id-"{{i}},
+                name: "Reserved",
+                date: [reservation_data[i]['start_date_format'], reservation_data[i]['end_date_format']],
+                type: "event",
+                description: "Description here"
+
+            },
+
+            // more events here
+        ]
+    }
+
+    $('#calendar').evoCalendar({
+        calendarEvents: myEvents,
+
+    });
+    const start_date_picker = MCDatepicker.create({
+        el: '#start_date',
+        dateFormat: 'YYYY-MM-DD',
+    })
+
+    function get_formated_date() {
+        var start_date_value = $('#start_date').val()
+        console.log(start_date_value)
+        start_date_value = start_date_value.replace(/-/g, ',')
+        return start_date_value
+    }
+    var x = get_formated_date()
+    const end_date_picker = MCDatepicker.create({
+        el: '#end_date',
+        dateFormat: 'YYYY-MM-DD',
+    })
+    $('#aa').on('click',function (){
+        console.log(reservation_data)
+    })
+
+
+    var reservation_create_list = []
+    var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+    function getData() {
+        var reservation_dict = {}
+        reservation_dict['start_date'] = $('#start_date').val()
+        reservation_dict['end_date'] = $('#end_date').val()
+        reservation_create_list.push(reservation_dict)
+
+        var data = {
+            csrfmiddlewaretoken: csrftoken,
+            reservation_create_list: JSON.stringify(reservation_create_list),
+        };
+        console.log("dddddddddddddddd", data)
+        savePostData(data);
+        swal("You've completed the reservation", reservation_dict['start_date']+" to "+reservation_dict['end_date'], "success");
+
+
+    }
+
+    function savePostData(queryDataSet) {
+        var tcv = null;
+        $.ajax({
+            'async': false,
+            'type': "POST",
+            'global': false,
+            'dataType': 'json',
+            'data': queryDataSet,
+            'Access-Control-Allow-Origin': '*',
+            'url': "/save",
+            'success': function (data) {
+                tcv = data;
+                console.log("success")
+            },
+            'error': function (data) {
+                console.log("hhh")
+            }
+
+        });
+        return tcv;
+    }
+
+</script>
+</body>
+</html>
